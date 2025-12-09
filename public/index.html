@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дневник настроения - API</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; border-radius: 8px; }
+        h1 { color: #333; margin-bottom: 20px; }
+        h2 { color: #444; margin: 20px 0 10px; }
+        .endpoint { background: #dcd1e8; padding: 15px; margin: 10px 0; border-radius: 4px; }
+        .method { display: inline-block; padding: 3px 8px; margin-right: 10px; }
+        .url { font-family: monospace; background: #333; color: white; padding: 8px; border-radius: 4px; margin: 8px 0; }
+        .api-test-area { margin-top: 30px; padding: 20px; background: #dcd1e8; border-radius: 8px; }
+        input, textarea, select, button { padding: 8px; margin: 5px 0; width: 100%; }
+        button { background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #response { margin-top: 20px; padding: 15px; background: #333; color: white; border-radius: 4px; font-family: monospace; white-space: pre-wrap; display: none; }
+        #response.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API Дневник настроения</h1>
+        
+        <h2>Возможности:</h2>
+        
+        <div class="endpoint">
+            <span class="method">GET - Получить все записи</span>
+            <div class="url">/api/moods</div>
+            <p>Query параметры: ?date=2024-01-15, ?mood=happy, ?tag=учеба</p>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method">GET - Получить запись по ID</span>
+            <div class="url">/api/moods/1</div>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method">POST - Создать новую запись</span>
+            <div class="url">/api/moods</div>
+            <p>Формат запроса(строка): {"date": "2024-01-18", "mood": "happy", "description": "...", "tags": ["тег1", "тег2"]}</p>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method">PUT - Обновить запись</span>
+            <div class="url">/api/moods/1</div>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method">DELETE - Удалить запись</span>
+            <div class="url">/api/moods/1</div>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method">GET - Статистика</span>
+            <div class="url">/api/moods/stats/overview</div>
+        </div>
+        
+        <div class="api-test-area">
+            <h2>Тестирование API</h2>
+            
+            <select id="method">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
+            
+            <input type="text" id="url" value="/api/moods" placeholder="URL">
+            
+            <textarea id="body" placeholder="Тело запроса (JSON)" style="display: none;">{
+    "date": "2024-01-18",
+    "mood": "happy",
+    "description": "Тестовая запись",
+    "tags": ["тест"]
+}</textarea>
+            
+            <button onclick="sendRequest()">Отправить запрос</button>
+            
+            <div id="response"></div>
+        </div>
+    </div>
+
+    <script>
+        const methodSelect = document.getElementById('method');
+        const bodyTextarea = document.getElementById('body');
+        
+        methodSelect.addEventListener('change', function() {
+            bodyTextarea.style.display = (this.value === 'POST' || this.value === 'PUT') ? 'block' : 'none';
+        });
+        
+        async function sendRequest() {
+            const method = methodSelect.value;
+            let url = document.getElementById('url').value;
+            const responseDiv = document.getElementById('response');
+            
+            if (!url.startsWith('http')) {
+                url = window.location.origin + url;
+            }
+            
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            if ((method === 'POST' || method === 'PUT') && bodyTextarea.value) {
+                try {
+                    options.body = bodyTextarea.value;
+                } catch (e) {
+                    responseDiv.textContent = 'Ошибка в JSON: ' + e.message;
+                    responseDiv.className = 'response show';
+                    return;
+                }
+            }
+            
+            try {
+                const response = await fetch(url, options);
+                const data = await response.json();
+                
+                responseDiv.textContent = `Статус: ${response.status}\n\n${JSON.stringify(data, null, 2)}`;
+                responseDiv.className = 'response show';
+            } catch (error) {
+                responseDiv.textContent = 'Ошибка: ' + error.message;
+                responseDiv.className = 'response show';
+            }
+        }
+    </script>
+</body>
+</html>
